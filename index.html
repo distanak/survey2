@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024">
+    <title>Pengisian Survey Kesiapan Sistem Merit - Distanak Kukar</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 p-6 font-sans">
+
+    <div class="max-w-5xl min-w-[1000px] mx-auto bg-white p-6 rounded-3xl shadow-sm border-t-4 border-green-600">
+
+        <div class="mb-6 p-5 bg-green-50 border border-green-200 rounded-2xl text-base text-gray-700">
+            <h2 class="font-bold text-red-500 mb-2 underline">CARA MENGISI SURVEY :</h2>
+            <ol class="list-decimal list-inside space-y-1 mb-4 text-gray-800">
+                <li>Kunjungi laman <a href="https://inagov.go.id/" target="_blank" class="text-blue-600 underline font-medium">https://inagov.go.id/</a></li>
+                <li>Masuk menggunakan akun SSO BKN (akun MyASN masing-masing pegawai)</li>
+                <li>Klik "Survei & Kuis" pada menu sisi kiri layar </li>
+                <li>Pada Tab "Survei", pilih "Survei Kepuasan dan Keterikatan Pegawai ASN".</li>
+                <li>Silahkan baca pentunjuk pengisian survei dan isi seluruh pertanyaan yang tersedia.</li>
+                <li>Setelah klik Kirim Jawaban akan muncul notifikasi bahwa jawaban berhasil disimpan</li>
+                <li>Segera di screenshot notifikasi tersebut untuk kemudian diunggah pada tabel dibawah</li>
+            </ol>
+            <div class="pt-3 border-t border-green-200 text-base text-gray-600">
+                <span class="font-semibold">Dasar kegiatan pengisian survey : </span> 
+                <a href="https://s.id/surveydistanak" target="_blank" class="text-blue-600 underline font-medium ml-1">Surat edaran Sekda No. B-634/BKPSDM/400.3.5.3/08/2026</a>
+                <p class="font-semibold">Batas waktu pengisian survey : paling lambat tanggal 17 September 2026, pukul 15.00 WITA </p> 
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-black text-gray-800 mb-2">Daftar Responden Survei Kesiapan Sistem Merit</h2>
+        <p class="text-gray-500 text-base mb-6">Silahkan unggah foto screenshot bukti telah mengisi survey</p>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-100 text-xs uppercase text-gray-500 font-bold">
+                    <tr>
+                        <th class="p-4 rounded-tl-xl">NIP</th>
+                        <th class="p-4">Nama Pegawai</th>
+                        <th class="p-4">Unit Kerja</th>
+                        <th class="p-4 text-center">Status pengisian survey</th>
+                        <th class="p-4 rounded-tr-xl text-center">Bukti telah mengisi</th>
+                    </tr>
+                </thead>
+                <tbody id="tabel-pegawai" class="divide-y text-sm text-gray-700">
+                    <!-- Data akan dimunculkan oleh Javascript di sini -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer class="text-center py-6 text-xs text-gray-500">
+        Build by : <a href="https://id.linkedin.com/in/awang-faisyal-rachman" target="_blank" class="text-green-700 font-bold hover:underline">awangfaisal</a>
+    </footer>
+    
+    <script>
+        // --- KONEKSI SUPABASE ---
+        const supabaseUrl = 'https://blvfmytswkxfrgcwpaye.supabase.co'; 
+        const supabaseKey = 'sb_publishable_ilaOVzKJ-fnePlsXvIk6ZQ_TQE3Bmcl'; 
+        const clientSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Daftar pegawai sesuai data yang benar (441 Pegawai)
+        const daftarPegawai = [
+            { nip: "197208251997031004", nama: "Moh.Rifani, S.Hut", unit: "Kepala Dinas" },
+            { nip: "197704192008011015", nama: "Rudi Afriandi, S.P", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197510022003122004", nama: "Fitri Susilawaty, S.Sos", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197706152008012031", nama: "Henny Herawaty, S.P", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198410292006042010", nama: "Ita Purnamasari, S.P", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197501072007011025", nama: "A.Jirzi Zaidhan", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197510212007012021", nama: "Darhayani", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197411212007011015", nama: "Harun Alrasyid", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198010052007012025", nama: "Idlin Fitriani", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197008172007012036", nama: "Jasnah Handayani", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "196903272007011021", nama: "Taupiqqurahim", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198206042008011017", nama: "Tursino Hadi", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198407062010011025", nama: "Fahim Panartion", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "196906142007011041", nama: "Kastam", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "199007262025211029", nama: "Tria Ahmadi, S.E", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198312142025211018", nama: "Saiful Arif, S.Sos", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198112272025212016", nama: "Rima Rusmala Dewi, S.P", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "199507052025212030", nama: "Nurul Istiqomah, S.E", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198811172025211020", nama: "M.Abu Bakar, S.Sos", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198803072025212029", nama: "Asmida Nur Santi, S.E", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198903292025211022", nama: "Budi Arfiandi, S.Sos", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198109062025212013", nama: "Dewi Sriyastini, S.P", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "199305222025211015", nama: "Ery Setiawan, S.E", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "199106052025212040", nama: "Fabian Weda Ningrum, S.E", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198510252025211031", nama: "Henky Firmansyah, S.Sos", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "196811212025212001", nama: "Ellyana", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198506192025212020", nama: "Hirma Juni Arsa", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197901032025211017", nama: "Joko Prawono", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198402162025211021", nama: "Kusbandi Dwi Suripto", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "200104242025211006", nama: "Muhammad Hendra Dwi Putra", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198609292025211030", nama: "Rahmat Nur Ibrahim", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "199107292025211030", nama: "Ronny Wijaya", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "200012152025212008", nama: "Selvina Rahmadani", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197511112025212011", nama: "Widiyawati", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "200112042025211006", nama: "Wira Nur Supriadi", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "200102022025211009", nama: "Muhammad Zulfan Arhanda", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198311112025211039", nama: "Iqtishor Saphari", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197609062025211024", nama: "Muhammad Gazali", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198308232025211043", nama: "Abdul Mutalib", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197208052025212014", nama: "Sri Hartati", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "198602092025211035", nama: "Rachmat Hidayat", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "199810272025211045", nama: "Aji Muhammad Ridho Ihsan", unit: "Sekretariat - Subag Umum dan Ketatalaksanaan" },
+            { nip: "197912162005012022", nama: "Ahsun Inayati, S.P, M.P", unit: "Sekretariat" },
+            { nip: "197412202003122006", nama: "Zaiminar Rusnani, S.E, M.Si", unit: "Sekretariat" },
+            { nip: "198307012009021001", nama: "Achmad Akbar, S.Sos, M.Si", unit: "Sekretariat" },
+            { nip: "198209212010011021", nama: "E.Achmad Gozali, S.P", unit: "Sekretariat" },
+            { nip: "197411192008012011", nama: "Emmy Aryani, S.E", unit: "Sekretariat" },
+            { nip: "198309272010011013", nama: "Iwan Priansyah, S.P", unit: "Sekretariat" },
+            { nip: "197609012011011001", nama: "John Laurens Barus, S.E, M.M", unit: "Sekretariat" },
+            { nip: "196910162008012019", nama: "Nikmah, S.P", unit: "Sekretariat" },
+            { nip: "197307022007011032", nama: "Zulkifli, S.E", unit: "Sekretariat" },
+            { nip: "197910142008012018", nama: "Erwina Sari, S.Sos", unit: "Sekretariat" },
+            { nip: "197909152014031001", nama: "Awang Faisyal Rachman, S.Sos, M.Si", unit: "Sekretariat" },
+            { nip: "197502172006041008", nama: "Akhmad Syaifuddin Nor, S.P", unit: "Sekretariat" },
+            { nip: "197604152008012027", nama: "Jamilah, S.E", unit: "Sekretariat" },
+            { nip: "197701012007011028", nama: "M. Robyansyah, S.Sos", unit: "Sekretariat" },
+            { nip: "198011242007012008", nama: "Ninik Riyanti, S.P", unit: "Sekretariat" },
+            { nip: "197905062007012021", nama: "Rina Ariani, S.P", unit: "Sekretariat" },
+            { nip: "198202072008012015", nama: "Risa Widiawati Safitri, S.Sos", unit: "Sekretariat" },
+            { nip: "198107142007011010", nama: "A.Juliansyah", unit: "Sekretariat" },
+            { nip: "197904042010011023", nama: "Iwan Supriadi", unit: "Sekretariat" },
+            { nip: "197212092008012011", nama: "Nani Rohanah", unit: "Sekretariat" },
+            { nip: "197110262001122003", nama: "Susy Aryani", unit: "Sekretariat" },
+            { nip: "197710252007012024", nama: "Tamerlan Mardiana", unit: "Sekretariat" },
+            { nip: "198312292010011005", nama: "Abdul Gapur", unit: "Sekretariat" },
+            { nip: "198011102010011025", nama: "Joko Suprayitno", unit: "Sekretariat" },
+            { nip: "198310122025211022", nama: "Hendro Prawoto, S.P", unit: "Sekretariat" },
+            { nip: "199101172025212031", nama: "Nur Hafijah, S.P", unit: "Sekretariat" },
+            { nip: "199507172025212069", nama: "Dinna Yulinda, S.T.P", unit: "Sekretariat" },
+            { nip: "198008172025211123", nama: "Makkamadin Aras Nai, S.H, M.H", unit: "Sekretariat" },
+            { nip: "198208292025211019", nama: "Aji Faisal Hasan", unit: "Sekretariat" },
+            { nip: "199510102025212038", nama: "Emy Latifah", unit: "Sekretariat" },
+            { nip: "197406222025212008", nama: "Yuni Yarni", unit: "Sekretariat" },
+            { nip: "198105252025211046", nama: "Ika Purwanto", unit: "Sekretariat" },
+            { nip: "199303042025212047", nama: "Erlita Sari", unit: "Sekretariat" },
+            { nip: "199309062025211061", nama: "Zeth Rerung", unit: "Sekretariat" },
+            { nip: "196808122025212005", nama: "Siti Muhani", unit: "Sekretariat" },
+            { nip: "199408172025211101", nama: "Agus Yulianto", unit: "Sekretariat" },
+            { nip: "197406132025211026", nama: "Edwin Syahruni", unit: "Sekretariat" },
+            { nip: "197401012007011065", nama: "M.Nazyarudin Miar, S.T", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197401092000121003", nama: "H. Yayan Fazli,  S.P, M.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197608162008011034", nama: "Suriyadi Aswad, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197506192008011009", nama: "Agus Suwarno, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197202011994021001", nama: "Edy Saputra, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197408282010012004", nama: "Henny Agustinah, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197705022007012047", nama: "Indah Meiliawaty, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197206082010011011", nama: "Irwansyah, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "196906142008012021", nama: "Mahda Fitriyani, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197702082010012015", nama: "Nurul Wardani, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197905112010012017", nama: "Rina Andriani, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197303182010012001", nama: "Rini Widyastuti, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197705272010011005", nama: "Sutarno, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197209112008011017", nama: "Usman, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197503202000122003", nama: "Weni Triana, S.Sos", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197307022000121004", nama: "Sofyansyah A, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197203282001122001", nama: "Musfi Hardani, S.Sos", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197407102007011029", nama: "Budi Hartono, S.Sos", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197302082007011028", nama: "Edi Suseno, S.Pkp", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197103202006041015", nama: "Saipul Anwar, S.Sos", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198107242008011011", nama: "Alfian Hadi, A.Md", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198011302009011003", nama: "Aji Akhmad Sofian Nur Adinata K", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197208082008011021", nama: "Burahmat", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198002202007011018", nama: "Mohamad Amin", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198512052010011010", nama: "Muhamad Nasir", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197208122010011003", nama: "Nurhamdi", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198206062007012017", nama: "Ria Rosalin", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198111172009022003", nama: "Rusdaniah", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197601032007011016", nama: "Sapri Murianto", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197602052007011010", nama: "Syafriansyah Rahman", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197503012007011024", nama: "Hadiansyah", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198003152010011026", nama: "Amiruddin", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198508312025211026", nama: "Adi Rahmadi, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198808172025211054", nama: "Agus Pratikno, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "199310062025211030", nama: "Asep Widianto, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198910252025211029", nama: "Didik Suhardiman, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "199702252025211017", nama: "Dio Subyakto Pratama, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198504232025211028", nama: "Hendra Saputera, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197206062025211019", nama: "Herliyansyah, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198504122025212023", nama: "Nani Kumala Sari, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198512302025212022", nama: "Rusdiana, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198111272025212011", nama: "Sri Handayani, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197907292025211010", nama: "Urbanus Paering, S.TP", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "199005112025211029", nama: "Yogy Dewantana, S.TP", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "199004302025212041", nama: "Pitri Anggawati, S.P", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197802152025212022", nama: "Melliawati", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "198810222025212054", nama: "Norma Rusmita", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "199104032025211046", nama: "Heru Prabowo", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "199509282025211041", nama: "Ferri Pratama", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197806172025211056", nama: "Hasanudin", unit: "Bidang Prasarana dan Sarana" },
+            { nip: "197803072010011008", nama: "M.Farid, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197411041999031006", nama: "Taufik, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197606092008011019", nama: "Akhmad Riza Ramandha, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198012032000122002", nama: "Eli Yanasusanti, S.Sos", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197707212008012013", nama: "Ely Nuryanti, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197311212008012010", nama: "Leliana, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197103102007011034", nama: "Nurodin, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197906032010012019", nama: "Sudarwati, S.P, M.Si", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197802262008012016", nama: "Titin Damayanti, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197903082008011025", nama: "Kus Endang Junaidy, S.Hut", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197703112007011016", nama: "Aji Roy Winata, S.E", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197308012007011031", nama: "Haryono, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197705122008011034", nama: "Joko Supadmo, S.Pkp", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197707142007012034", nama: "Juliana Astuti, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197903302007011007", nama: "Muhammad Anton Yusva, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197210122008012015", nama: "Nor Asikin, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197508242009021001", nama: "Muhamad Agus, S.Sos", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198204042009021008", nama: "Supriyatno, S.E", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197902172008011018", nama: "M.Johansyah, S.E", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197703102008011018", nama: "Yudhi Hermawan, A.Md", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198107052008011023", nama: "Akhmad Rizali, A.Md", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198011292009012001", nama: "Erni Fithriani", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197309052007011025", nama: "Junaidi", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198001152008012012", nama: "Mulyani", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "196810112007012023", nama: "Rimayana", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198111172007012012", nama: "Sarah Ratna Afianti", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197603012010011010", nama: "Syahrudin", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197407152008011021", nama: "Syarifuddin", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197809172010011011", nama: "Zakaria", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198808132025211021", nama: "Ahmad Muslim, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198802072025212020", nama: "Dila Risdiani, S.Sos", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198211212025212015", nama: "Dwy Eka Maharani, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198401222025211011", nama: "Efri Januari, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "199104162025212032", nama: "Elisa Fitriani, S.Sos", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198202232025212016", nama: "Emelda Riska Susanti, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198710162025212022", nama: "Eny Fitriany, S.Sos", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "199312222025211022", nama: "Ervian Haribudiman, S.Sos", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198805152025211054", nama: "Fitriansyah, S.Sos", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198403152025211030", nama: "Hendro Winarto, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197902212025212007", nama: "Iva Yanti, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198311092025211020", nama: "Lalu Muhamad Syukur, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "199202132025211026", nama: "Mochammad Zainuri Ikhwan, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198311182025211012", nama: "Muhammad Fazri Azhari, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197909032025211022", nama: "Rachmad Afandi, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198306102025212026", nama: "Suprapti, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198204262025211011", nama: "Susanto Hadi Prastyoningtias, S.P", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197104262025212005", nama: "Aji Theresia Bariah", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "199408052025212068", nama: "Melda Maya Sari", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198609092025212060", nama: "Ayu Ditha Pratiwi", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "198609232025212037", nama: "Ika Mardiana Astuti", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197005132025212004", nama: "Zainab", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "200206222025211006", nama: "Muhammad Andra Ariadi", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "199708162025212086", nama: "Dayang Siti Selsilawati Agustina", unit: "Bidang Tanaman Pangan dan Hortikultura" },
+            { nip: "197701312008011012", nama: "Erwin Suryawirawan, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197109292007012021", nama: "Marlinna Miar, SP, M.Si", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198101272001121003", nama: "Hendra Budianoor, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198210262009011003", nama: "Arizal Rakhman, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197705312009022001", nama: "Ida Yuspa Sari, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "196903211998031004", nama: "A.M. Djunaidi A, S.St", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197512172008011007", nama: "Adriansyah, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197512162007012016", nama: "Arbiana Sukmawati, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197602272001122003", nama: "Diana Munawwarah, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198311012010011018", nama: "Johan Syahrani, S.P, M.A.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197906182010012006", nama: "Lenni Marlina Ritonga, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197411042008011013", nama: "Misrani Dedy Riyanto, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197412162008012008", nama: "Maryani, S.E", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197910302010012003", nama: "Sri Rahayu, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "196912222000121004", nama: "Asnan A, S.Sos", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198112012008012016", nama: "Desy Susanti, S.Kom", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197806182008012025", nama: "Khrisna Yuniarti, A.Md, S.Hut", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198604162010012028", nama: "Rima Afrima.A, S.E", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198105012009021002", nama: "Rahmad Haryadi, A.Md", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197804222009012001", nama: "Norma", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197501232000122002", nama: "Erniwati", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "196902112007011027", nama: "Agus Elfian Joni", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197407032007011029", nama: "Andri", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197408072007011034", nama: "Badran, S.HI", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198107182010012004", nama: "Fitria Yulianti", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197501052009061005", nama: "Hermanto", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197201152007012025", nama: "Ida Charyani", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198203162009021003", nama: "Jamroni", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197003152010011004", nama: "Lambas Sitompul", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198011252007011011", nama: "Sopyan Hadi", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197606112007012019", nama: "Sri Hartati", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198302022008012024", nama: "Sulastri", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "196904022009021001", nama: "Supriyono", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197005212007011029", nama: "Susanto", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198310022012121003", nama: "Andi Wahyudi", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197104172006041014", nama: "Mursyid", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198407272010011031", nama: "Rendi Irawan", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198909072025211027", nama: "Abdullah Zauhari, S.Pd.I", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197708112025211011", nama: "Agus Suprianto, S.E", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199905252025212018", nama: "Alda Nanda Pratiwi, S.Pd", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199002022025211032", nama: "Ali Rahman, S.Pd", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198410032025211020", nama: "Anggi Wijaya Mulawarman, SH", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198506012025211025", nama: "Eka Ramadani, S.PKP", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199004162025212029", nama: "Endah Mayangsari, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199402282025211035", nama: "Feby Ade Nuzuliadi, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199110022025212032", nama: "Heny Rosyani, S.E", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "196905122025212005", nama: "Ida Nirmala, S.E", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197609292025211016", nama: "Irwan, S.Ak", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198210182025211025", nama: "M. Zakaria, S.E", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199708012025211015", nama: "Muhammad Musthofa Ulya, S.Pd", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198604082025211034", nama: "Mulyadi, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199112042025212024", nama: "Musdalipah, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199109222025212032", nama: "Noor Baity, S.P", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198508062025211031", nama: "Randi Hastaria, S.E", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198710182025211027", nama: "Rendi Kurniawansyah, S.E", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197206152025211018", nama: "Suparjiono, S.E", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198408272025212048", nama: "Irma Wahyuni, S.P.", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198402062025211021", nama: "Aulia Rahman, A.Md", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198707262025212032", nama: "Rohana Tristina", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198105052025212031", nama: "Tri Handayani", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197005132025211010", nama: "Hari Santiko", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197703282025212014", nama: "Norsehan", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198701212025212030", nama: "Noor Santi", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197709172025211018", nama: "Syafitriansyah", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198111292025212008", nama: "Herika Dianti", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199212182025212025", nama: "Dita Siskiani", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198102182025212018", nama: "Dwi Febriatiningsih", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199303022025212027", nama: "Tri Endang Wahyuni", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199908162025212012", nama: "Khairun Nisa", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197709062025212011", nama: "Silvana Rahmawati", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197701292025212003", nama: "Sri Wahyuni", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "196908052025211010", nama: "Sugianto", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197401012025212005", nama: "Sutarsih", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198610212025211025", nama: "Wawan Setiawan", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198605112025212022", nama: "Yanti Astuti", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197808212025211010", nama: "Padli", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198108112025211022", nama: "Sudarno", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198201082025211017", nama: "Widodo", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198510032025212014", nama: "Eva Susanti", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197610052025212006", nama: "Ida Farida", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198110062025212009", nama: "Ida Wahyuni", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197512202025211012", nama: "Sofyan Nur", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198907122025211039", nama: "Zulfani Azwar", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199405242025211025", nama: "Firdaus Alam Setiawan", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197708142025211014", nama: "Hosen", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198704022025211022", nama: "M.Mustamin", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197606162025211018", nama: "Nanang Effendi", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198903092025211034", nama: "Putra Adiatma", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199303152025212037", nama: "Tria Nurista Laqad K", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198404202025211039", nama: "Pajriani", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199705292025211029", nama: "Habiburrohman", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198703172025212023", nama: "Etri Dayanti", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197109012025212005", nama: "Heni Herawati", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199702232025212015", nama: "Nadya Febrianti Putri", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198803222025212034", nama: "Rusmila Mardianti", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198009302025212018", nama: "Mawarni", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "198807072025211091", nama: "Surahman", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197201162025212010", nama: "Baniah", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "200201012025212006", nama: "Leli Chandra Repita", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197505102025211055", nama: "Al Qadri", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199108272025211043", nama: "Firman Qalam Setiawan", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197704152025212020", nama: "Sumi", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "199404042025211155", nama: "M. Noer Budi Setiawan", unit: "Bidang Usaha dan Penyuluhan" },
+            { nip: "197306162007011037", nama: "Iwan Hermawan, S.Pt, M.Si", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197609202006041003", nama: "Aji Zikri Zulfian,  S.Pt", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198303262010012028", nama: "Tri Widiastuti S.W, S.E", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197309282007011029", nama: "Erau Achmad Rusianto, S.E", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197009252000121006", nama: "Sahono, S.Pkp", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197811122007012024", nama: "Akhdalena, S.E", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197405062007012033", nama: "Eka Nursih, S.P", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197201062007011026", nama: "Herry Gunawan, S.E", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197604122007012033", nama: "Leli Mahdalena, S.Sos", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197706082007011020", nama: "Samsi, S.E", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197212182007011012", nama: "Syahmadi, S.Sos", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198307122008012013", nama: "Tati Hariaty Fitri, S.E", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197004142000122005", nama: "Eny Diana, A.Md", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197001142000121004", nama: "Muhammad Fuad", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197808272007011008", nama: "Faidil Anwar", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197607252007012027", nama: "Heny Triana", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "196808162006041013", nama: "Husni Thamrin", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197803212007011010", nama: "Iwan Wahyudi", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198101032007011016", nama: "M.Nur Alamsyah", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197107272007012022", nama: "Nafisah", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197111052025211012", nama: "Drh. Gunawan Nanang Dwi Basuki Soewarto", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "199606032025212025", nama: "Drh. Rianty Novita Sari", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197008172025212009", nama: "Agustina.Mb, S.P", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198110072025211021", nama: "Ahmad Efendi, S.E", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198409182025212020", nama: "Delta Septi Syulliana, S.E", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "199501162025211014", nama: "Dimas Bhakti Nan Ichsani, S.Pt", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "199106202025212028", nama: "Ema Zulfianti, S.Pt", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198601092025212015", nama: "Ida Ayu Putu Sri Utami, S.E", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197605262025212013", nama: "Mailia Widiastuti, SP., M.Si", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "199102122025211034", nama: "Mochamad Hendriawan.S. S.P", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198611292025212025", nama: "Rosita, S.Sos", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197610092025212012", nama: "Salmawati, S.Pt", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197608062025212008", nama: "Suliem, S.Sos", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198604072025212027", nama: "Syartika Tristiana, S.Sos., M.H", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198112102025211021", nama: "Wawan Supriawan, S.Sos", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "197608132025212011", nama: "Benny Lugiarti, S.P", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198607262025211040", nama: "Hariyanto Nathan, S.P", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "199412052025212048", nama: "Ramadana, S.P", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "199303252025212076", nama: "Debora Maretha Aulia Elva Br Siahaan, S.Pt", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198211192025212011", nama: "Noor Hidayah", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198702262025211022", nama: "Wahyudhi", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "198603052025211026", nama: "Kurniawan Adi Surya", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "200201012025212020", nama: "Eva Rosita", unit: "Bidang Peternakan dan Kesehatan Hewan" },
+            { nip: "196906012000121007", nama: "Hery Marsudi J, S.P, M.P", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "197611192010012015", nama: "Muliani, S.P", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "197308011997031003", nama: "Suharyono, S.P", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "197302052008012016", nama: "Astuti, S.Sos", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "197806102007012023", nama: "Suharda, S.P", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "197210122000122003", nama: "Rukiati, S.Pkp", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "198107152008011019", nama: "Indra Gunawan, S.P", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "198211022007011004", nama: "Erie Roebiyanto, S.P", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "197911092008011011", nama: "Irwansyah", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "198008122009022009", nama: "Windarti", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "198404122010011025", nama: "Syahroni", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "198101282010011002", nama: "Indra Budiman", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "198111082025212016", nama: "Rusniah, A,Md", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "199706092025212016", nama: "Githa  Puspita Sari", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "197709032025211023", nama: "Siyamto", unit: "UPT Balai Benih Pembantu Tanaman Pangan" },
+            { nip: "198006192010012019", nama: "Indah Kusumawati, S.P", unit: "UPT Balai Benih Pembantu Hortikultura" },
+            { nip: "197407042008011017", nama: "Gunarto", unit: "UPT Balai Benih Pembantu Hortikultura" },
+            { nip: "198106042010012028", nama: "Salmiah, S.P", unit: "UPT Balai Benih Pembantu Hortikultura" },
+            { nip: "197503022007011022", nama: "Sapran", unit: "UPT Balai Benih Pembantu Hortikultura" },
+            { nip: "197704082010011011", nama: "Joko Apriyono Putro", unit: "UPT Balai Benih Pembantu Hortikultura" },
+            { nip: "197705082025211011", nama: "Adi Susanto, A.Md", unit: "UPT Balai Benih Pembantu Hortikultura" },
+            { nip: "197410252025211014", nama: "Moh. Hasan", unit: "UPT Balai Benih Pembantu Hortikultura" },
+            { nip: "197807042025211031", nama: "Masroni", unit: "UPT Balai Benih Pembantu Hortikultura" },
+            { nip: "197101132007012009", nama: "Elvi Noor Sukaisih, S.P", unit: "UPT Balai Proteksi Tanaman Pangan Dan Hortikultura" },
+            { nip: "197307012008012017", nama: "Suyatun, S.P", unit: "UPT Balai Proteksi Tanaman Pangan Dan Hortikultura" },
+            { nip: "198506032010012036", nama: "Istikharah,  S.Sos", unit: "UPT Balai Proteksi Tanaman Pangan Dan Hortikultura" },
+            { nip: "198209122008011011", nama: "Ismiyanto", unit: "UPT Balai Proteksi Tanaman Pangan Dan Hortikultura" },
+            { nip: "197704262008011016", nama: "Machmum Imam Cholis", unit: "UPT Balai Proteksi Tanaman Pangan Dan Hortikultura" },
+            { nip: "197308012007012031", nama: "Sri Heldina", unit: "UPT Balai Proteksi Tanaman Pangan Dan Hortikultura" },
+            { nip: "198003232009021003", nama: "Deddy Supiadi", unit: "UPT Balai Proteksi Tanaman Pangan Dan Hortikultura" },
+            { nip: "198903262025212030", nama: "Retno Pudji Kusumaningsih", unit: "UPT Balai Proteksi Tanaman Pangan Dan Hortikultura" },
+            { nip: "197609012025211023", nama: "Muhammad Nur", unit: "UPT Balai Proteksi Tanaman Pangan Dan Hortikultura" },
+            { nip: "197504192008011009", nama: "Sukianto, A.Md", unit: "UPT Pembibitan Sapi Potong, Muara Kaman" },
+            { nip: "197805022007012026", nama: "Arbainah", unit: "UPT Pembibitan Sapi Potong, Muara Kaman" },
+            { nip: "197208262007011011", nama: "Mirhansyah", unit: "UPT Pembibitan Sapi Potong, Muara Kaman" },
+            { nip: "198610092025212026", nama: "Mita", unit: "UPT Pembibitan Sapi Potong, Muara Kaman" },
+            { nip: "198812312025211071", nama: "Muhtadin", unit: "UPT Pembibitan Sapi Potong, Muara Kaman" },
+            { nip: "197101132007012010", nama: "Siti Asyiah,  A.Md", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "197906152007011013", nama: "Eddy Sarjono, S.Pkp", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "197406192010011006", nama: "Erwindo Senantha", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "197306242008011012", nama: "Alpiansyah", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "198606092008011003", nama: "Fitrianto", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "197305152001121011", nama: "Syahlan Nuraidi", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "198403252010011024", nama: "Muhammad Taufik Joko Samudro", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "197108012025211012", nama: "Azhari", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "198607042025212017", nama: "Halimah", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "197603022025212006", nama: "Haniah", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "197608092025211012", nama: "Mahlan", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "198501092025212022", nama: "Mayang Sari", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "197503112025212008", nama: "Nurwahidah", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "198009282025211026", nama: "Dedi Aspawiharja", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "198807162025212076", nama: "Sukarni", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "199604042025211070", nama: "Muhammad Akbar", unit: "UPT Pusat Kesehatan Hewan, Kota Bangun" },
+            { nip: "197607182008012017", nama: "Sarnia, S.P", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "197210072007012028", nama: "Normaliana, SP, MP", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "197703122008012023", nama: "Dwi Wahyuni, S.P", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "197809192007011023", nama: "Benidektus", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "198003122008011020", nama: "Jayus", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "198111052008011015", nama: "Muhammad Kacong", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "197203232007011018", nama: "Muhayan", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "198409022010011017", nama: "Ridwan", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "197010242007011007", nama: "Sadriansyah", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "197806222007012013", nama: "Yuyun Handayani", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "198211252012121004", nama: "Arifuddin", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "197811242025212012", nama: "Zubaidah", unit: "UPT Pusat Kesehatan Hewan, Muara Badak" },
+            { nip: "197001292000121004", nama: "Joko Santoso, S.Sos., M.Si", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197206142001121005", nama: "Yudi Aspianta, S.H", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197104172006041013", nama: "Aspiani, S.P", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197206152008011019", nama: "Ruliansyah, S.P", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "196810282008011011", nama: "Sagir S, S.Sos", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "198205152008012025", nama: "Satriani, S.Pkp", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197805262008011015", nama: "Suwito, S.E", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197607212008012011", nama: "Yulianti, S.Pkp", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197010032007012022", nama: "Ernawati", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197808132008011016", nama: "Harianto Jumadi", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "198407052008012008", nama: "Kamsiah", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197508102007011038", nama: "Karno", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197801062007011008", nama: "Muhamad Subrantas", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197912252008011015", nama: "Supriadi", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197706282000121004", nama: "Suyanto", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "196909072025212007", nama: "Hoeriah", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "198007012025211045", nama: "Sugiyono", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "197311012025212001", nama: "Titi Lestari", unit: "UPT Pusat Kesehatan Hewan, Samboja" },
+            { nip: "196808082003121004", nama: "Subadi, A.Md.Pd", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "196902022007011021", nama: "Januri, S.Pkp", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "196912202008011008", nama: "Masliansyah, S.Pkp", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "197106042007011028", nama: "Jahriansah", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "197009042008011011", nama: "Kasmir", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "197205062008011018", nama: "M.Sahir", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "198106092008012026", nama: "Maria Ulfa M", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "196901302008011012", nama: "Supriyanto", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "198107182010012029", nama: "Yuli Susanti,  A.Md", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "198609192025211025", nama: "Bagus Irawan", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "199110072025212067", nama: "Ade Versilia Parastika", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "200307172025211003", nama: "Muhammad Arya Bekham", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "198510202025211082", nama: "Hendro Susanto", unit: "UPT Pusat Kesehatan Hewan, Tenggarong Seberang" },
+            { nip: "196903151994031017", nama: "Fathurrahman,  S.P", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "197508252000121005", nama: "Agus Sofyan Noor, S.E", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "198303122008011019", nama: "Didik Prayitno", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "196901121999031008", nama: "Abdu Said", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "196912032007011021", nama: "Edwin Odantara", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "197308202007011033", nama: "Muhammad Syarifuddin Nur", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "198711112006042001", nama: "Novia Mulyanti", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "198709092025211035", nama: "Irwansyah", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "198208212025211021", nama: "Julkifli", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "198608042025212026", nama: "Lisa Yuliandari", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "197407022025211017", nama: "Mirhansyah", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "197211252025212002", nama: "Murti", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "197601012025211024", nama: "Rudy Alvian", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "198909052025211038", nama: "Rully Gunawan", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "200304162025211002", nama: "Muhammad Alief Maulana", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "197107102025211016", nama: "Ishak", unit: "UPT Rumah Pemotongan Hewan Dan Pasar Hewan" },
+            { nip: "197608222000122002", nama: "Rahmawati Astuti, SM ", unit: "UPT Balai Pelaksana Penyuluhan Pertanian" }
+        ];
+
+        async function renderTabel() {
+            const tbody = document.getElementById('tabel-pegawai');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">Memuat data...</td></tr>';
+
+            let dataSurvey = [];
+            try {
+                const response = await clientSupabase.from('DataSurvey').select('*');
+                if (response.data) dataSurvey = response.data;
+            } catch (err) {
+                console.log("Database kosong/belum siap");
+            }
+
+            tbody.innerHTML = '';
+            let lastUnit = '';
+
+            daftarPegawai.forEach(pegawai => {
+                if (pegawai.unit !== lastUnit) {
+                    lastUnit = pegawai.unit;
+                    const trHeader = document.createElement('tr');
+                    trHeader.className = "bg-green-100 font-bold text-green-900 border-t-2 border-green-300";
+                    trHeader.innerHTML = `
+                        <td colspan="5" class="p-3 text-sm tracking-wide">
+                            📂 ${lastUnit}
+                        </td>
+                    `;
+                    tbody.appendChild(trHeader);
+                }
+
+                const catatanDatabase = dataSurvey?.find(d => d.nip === pegawai.nip);
+                const fileUrl = catatanDatabase ? catatanDatabase.file_url : null;
+
+                let statusHtml = '';
+                let aksiHtml = '';
+
+                if (fileUrl) {
+                    statusHtml = `<span class="bg-green-100 text-green-700 font-bold px-3 py-1 rounded-full text-xs">Sudah Mengisi</span>`;
+                    aksiHtml = `
+                        <div class="flex items-center justify-center gap-2">
+                            <a href="${fileUrl}" target="_blank" class="bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg text-xs hover:bg-blue-200 transition-colors inline-block">Lihat bukti</a>
+                        </div>
+                    `;
+                } else {
+                    statusHtml = `<span class="bg-gray-100 text-gray-500 font-bold px-3 py-1 rounded-full text-xs">Belum Mengisi</span>`;
+                    aksiHtml = `
+                        <label class="cursor-pointer bg-green-500 text-white font-bold px-4 py-2 rounded-lg text-xs hover:bg-green-600 transition-colors inline-block">
+                            Unggah bukti 
+                            <input type="file" class="hidden" onchange="uploadFile(event, '${pegawai.nip}', '${pegawai.nama}')" accept=".pdf, .jpg, .jpeg, .png" />
+                        </label>
+                    `;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 border-b border-gray-100";
+                tr.innerHTML = `
+                    <td class="p-4 font-mono text-xs pl-6">${pegawai.nip}</td>
+                    <td class="p-4 font-bold">${pegawai.nama}</td>
+                    <td class="p-4 text-xs text-gray-500">${pegawai.unit}</td>
+                    <td class="p-4 text-center">${statusHtml}</td>
+                    <td class="p-4 text-center">${aksiHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function uploadFile(event, nip, nama) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                return Swal.fire('Terlalu Besar!', 'Maksimal ukuran file adalah 2MB.', 'error');
+            }
+
+            try {
+                Swal.fire({ title: 'Mengunggah...', text: 'Mohon tunggu sebentar', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                const fileExt = file.name.split('.').pop();
+                const namaFileAman = `${nip}_${Date.now()}.${fileExt}`;
+
+                const { error: uploadError } = await clientSupabase.storage.from('dokumen-survey').upload(namaFileAman, file);
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = clientSupabase.storage.from('dokumen-survey').getPublicUrl(namaFileAman);
+                const urlDokumen = publicUrlData.publicUrl;
+
+                const { error: dbError } = await clientSupabase.from('DataSurvey').upsert([
+                    { nip: nip, nama: nama, file_url: urlDokumen }
+                ]);
+                if (dbError) throw dbError;
+
+                Swal.fire('Berhasil!', 'Dokumen telah tersimpan.', 'success');
+                renderTabel();
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Gagal!', 'Terjadi kesalahan saat mengunggah.', 'error');
+            }
+        }
+
+        window.onload = renderTabel;
+    </script>
+</body>
+</html>
