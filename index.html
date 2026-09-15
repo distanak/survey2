@@ -501,10 +501,10 @@
             const tbody = document.getElementById('tabel-pegawai');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">Memuat data...</td></tr>';
 
-            let dataSurvey = [];
+            let dataSurvey2 = [];
             try {
-                const response = await clientSupabase.from('DataSurvey').select('*');
-                if (response.data) dataSurvey = response.data;
+                const response = await clientSupabase.from('DataSurvey2').select('*');
+                if (response.data) dataSurvey2 = response.data;
             } catch (err) {
                 console.log("Database kosong/belum siap");
             }
@@ -525,7 +525,7 @@
                     tbody.appendChild(trHeader);
                 }
 
-                const catatanDatabase = dataSurvey?.find(d => d.nip === pegawai.nip);
+                const catatanDatabase = dataSurvey2?.find(d => d.nip === pegawai.nip);
                 const fileUrl = catatanDatabase ? catatanDatabase.file_url : null;
 
                 let statusHtml = '';
@@ -581,7 +581,7 @@
                 const { data: publicUrlData } = clientSupabase.storage.from('dokumen-survey').getPublicUrl(namaFileAman);
                 const urlDokumen = publicUrlData.publicUrl;
 
-                const { error: dbError } = await clientSupabase.from('DataSurvey').upsert([
+                const { error: dbError } = await clientSupabase.from('DataSurvey2').upsert([
                     { nip: nip, nama: nama, file_url: urlDokumen }
                 ]);
                 if (dbError) throw dbError;
